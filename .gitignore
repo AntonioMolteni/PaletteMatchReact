@@ -36,14 +36,17 @@ bower_components
 .lock-wscript
 
 # Compiled binary addons (https://nodejs.org/api/addons.html)
-build/Release
+backend/build/Release
+frontend/build/Release
 
 # Dependency directories
-node_modules/
-jspm_packages/
+/backend/node_modules/
+/backend/jspm_packages/
 
+/frontend/node_modules/
+/frontend/jspm_packages/
 # Snowpack dependency directory (https://snowpack.dev/)
-web_modules/
+
 
 # TypeScript cache
 *.tsbuildinfo

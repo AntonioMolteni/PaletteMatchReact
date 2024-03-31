@@ -1,0 +1,98 @@
+.multiplayer {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	height: 100vh;
+	/* Ensure the container takes up the full viewport height */	
+}
+.grid {
+	padding: 25px
+}
+
+
+body {
+	overflow: hidden;
+}
+
+.row {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.cell {
+	width: 50px;
+	height: 50px;
+	border-radius: 10px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
+}
+
+.occupiedUser {
+	transform: scale(1.2);
+	/* Adjust the scale factor as needed */
+	transition: transform 0.1s ease;
+	/* Add transition for smooth scaling effect */
+	animation: pulse 2.1s infinite alternate;
+	/* Define pulse animation with alternate direction */
+}
+
+@keyframes pulse {
+	0% {
+		transform: scale(0.8);
+		/* Initial scale */
+	}
+
+	20% {
+		transform: scale(1.2);
+		/* Scale down */
+	}
+
+	100% {
+		transform: scale(1.2);
+		/* Target scale */
+	}
+}
+.occupiedOpponent {
+	transform: scale(0.8);
+	/* Adjust the scale factor as needed */
+	transition: transform 0.3s ease;
+	/* Add transition for smooth scaling effect */
+}
+
+.goal-cell {
+	width: 100% !important;
+	border-radius: 10px;
+	display: flex;
+	justify-content: center;
+}
+
+.info-bar {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.checkmark-button {
+	border: none;
+	background: none;
+	cursor: pointer;
+}
+
+.checkmark {
+	width: 40px;
+	/* Adjust size as needed */
+	height: 40px;
+	/* Adjust size as needed */
+	stroke: black;
+	stroke-width: 2px;
+	fill: green;
+}
