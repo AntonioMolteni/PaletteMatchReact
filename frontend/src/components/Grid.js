@@ -12,7 +12,7 @@ export function getLuminance(color) {
     return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255; // Calculate luminance
 }
 
-function Grid({ numRows = 0, numColumns = 0, grid = [], player=null, roomId, currentPlayerSessionId, goalColor, onLockScore }) {
+function Grid({ numRows = 0, numColumns = 0, grid = [], playerSessionId, player=null, playerUsername, currentPlayerSessionId, currentPlayerUsername, goalColor, roomId, onLockScore, }) {
     // Create an array of rows, each containing cells
     const rows = [];
     const [cellSpacing, setCellSpacing] = useState(10);
@@ -76,14 +76,16 @@ function Grid({ numRows = 0, numColumns = 0, grid = [], player=null, roomId, cur
     const infoBarRow = (
         <div key="info-bar" className="row">
             <InfoBar
+                playerSessionId={playerSessionId}
+                currentPlayerSessionId={currentPlayerSessionId}
+                currentPlayerUsername={currentPlayerUsername}
                 goalColor={goalColor}
                 roomId={roomId}
-                currentPlayerSessionId={currentPlayerSessionId}
-                playerColor={player.playerColor}
-                playerScore={player.playerScore}
                 onLockScore={onLockScore}
+                
                 cellSize={cellSize}
-            />
+                playerColor={player.playerColor}
+                playerScore={player.playerScore}            />
         </div>
     );
     

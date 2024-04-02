@@ -9,10 +9,11 @@ export class Player extends Schema {
   @type("boolean") locked: boolean;
 
 
-  constructor(playerRow: number, playerCol: number) {
+  constructor(playerRow: number, playerCol: number, playerUsername="") {
     super();
     this.playerRow = playerRow;
     this.playerCol = playerCol;
+    this.playerUsername = playerUsername;
     this.locked = false;
   }
 }
@@ -43,6 +44,7 @@ export class Square extends Schema {
 export class MyRoomState extends Schema {
   @type({ map: Player }) players = new MapSchema<Player>();
   @type("string") currentPlayerSessionId: string;
+  @type("string") currentPlayerUsername: string;
   @type([Square]) grid = new ArraySchema<Square>();
   @type("int32") numRows: number;
   @type("int32") numColumns: number;

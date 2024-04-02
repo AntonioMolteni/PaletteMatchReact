@@ -92,12 +92,15 @@ export class MyRoom extends Room<MyRoomState> {
   onJoin(client: Client, options: any): void {
     console.log(client.sessionId, "joined!");
     const availableSquares = this.findAvailableSquares();
+    const { playerUsername } = options;
+    console.log(playerUsername);
     if (availableSquares.length > 0) {
       const randomIndex = Math.floor(Math.random() * availableSquares.length);
       const assignedSquare = availableSquares[randomIndex];
-      const player = new Player(assignedSquare.row, assignedSquare.col);
+      const player = new Player(assignedSquare.row, assignedSquare.col, playerUsername);
       if (this.state.isPlayersEmpty()) {
         this.state.currentPlayerSessionId = client.sessionId;
+        this.state.currentPlayerUsername = player.playerUsername
       }
       this.state.players.set(client.sessionId, player);
       this.state.getSquareAt(assignedSquare.row, assignedSquare.col).occupied = true;
@@ -141,6 +144,12 @@ export class MyRoom extends Room<MyRoomState> {
     // Set the currentPlayerSessionId to the session ID of the player at the new index
     this.currentPlayerIndex = nextPlayerIndex;
     this.state.currentPlayerSessionId = playerIds[this.currentPlayerIndex];
+  
+    // Set the currentPlayerUsername to the username of the current player
+    const currentPlayer = this.state.players.get(this.state.currentPlayerSessionId);
+    if (currentPlayer) {
+      this.state.currentPlayerUsername = currentPlayer.playerUsername;
+    }
 
     // Check if all players are locked
     const allPlayersLocked = playerIds.every(id => {

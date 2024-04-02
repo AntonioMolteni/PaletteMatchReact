@@ -11,7 +11,7 @@ function Multiplayer() {
     const [room, setRoom] = useState(null);
     const [joinRoomId, setJoinRoomId] = useState("")
     const [showWelcomeScreen, setShowWelcomeScreen] = useState(true);
-
+    const [playerUsername, setPlayerUsername] = useState(""); 
     
     // Define an async function to handle asynchronous logic
     
@@ -26,10 +26,10 @@ function Multiplayer() {
                 // Join or create a room
                 let room;
                 if (joinRoomId === "create") {
-                    room = await client.create("my_room");
-                    console.log("room created with id:", room.id)
+                    room = await client.create("my_room", { playerUsername: playerUsername }); // Pass the username
+                    console.log("room created with id:", room.id);
                 } else {
-                    room = await client.joinById(joinRoomId)
+                    room = await client.joinById(joinRoomId, { playerUsername: playerUsername }); // Pass the username
                 }
                 console.log(room.sessionId, "joined", room.name);
                 setRoom(room);
@@ -72,20 +72,23 @@ function Multiplayer() {
         }
     };
 
-    const handleJoinRoom = (roomId) => {
+    const handleJoinRoom = (roomId, username) => {
         setJoinRoomId(roomId);
+        setPlayerUsername(username); // Save the username in the state
         setShowWelcomeScreen(false);
     };
 
-    const handleCreateRoom = () => {
+    const handleCreateRoom = (username) => {
         setJoinRoomId("create"); // Set joinRoomId to "create" to create a new room
+        setPlayerUsername(username); // Save the username in the state
         setShowWelcomeScreen(false); // Hide the welcome screen when creating a room
     };
 
     // button move handler
     useEffect(() => {
+        if (room) {}
         const detectKeydown = (e) => {
-            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight','w','s','a','d'].includes(e.key)) {
+            if (room && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight','w','s','a','d'].includes(e.key)) {
                 e.preventDefault();
                 console.log(e.key)
                 switch (e.key) {
@@ -175,10 +178,13 @@ function Multiplayer() {
                         numRows={roomState.numRows}
                         numColumns={roomState.numColumns}
                         grid={roomState.grid}
+                        playerSessionId={room.sessionId}
                         player={roomState.players.get(room.sessionId)}
+                        playerUsername={playerUsername}
+                        currentPlayerSessionId={roomState.currentPlayerSessionId}
+                        currentPlayerUsername={roomState.currentPlayerUsername}
                         goalColor={roomState.goalColor}
                         roomId={room.id}
-                        currentPlayerSessionId={roomState.currentPlayerSessionId}
                         onLockScore = {lockScore}
                     />
                 </div>

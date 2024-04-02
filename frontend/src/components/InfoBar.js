@@ -1,7 +1,7 @@
 import React from 'react';
 import { getLuminance } from './Grid'; // Assuming Grid.js is in the same directory
 
-function InfoBar({ goalColor, roomId, currentPlayerSessionId, playerColor, playerScore, onLockScore, cellSize, }) {
+function InfoBar({ playerSessionId, currentPlayerSessionId, currentPlayerUsername, goalColor, roomId, onLockScore, cellSize, playerColor, playerScore}) {
     return (
         <div className="info-bar" style={{ padding: 0, display: 'flex', alignItems: 'center' }}> {/* Added display: flex to make children elements horizontal */}
             <div className="goal-cell cell" id="goal-cell" style={{
@@ -9,7 +9,7 @@ function InfoBar({ goalColor, roomId, currentPlayerSessionId, playerColor, playe
             }}>
                 <div className="column">
                     <div className="cell-text" style={{ color: getLuminance(goalColor) > 0.5 ? 'black' : 'white' }}>
-                        <div>{currentPlayerSessionId}'s Turn</div>
+                        <div>{currentPlayerSessionId === playerSessionId ? 'Your Turn' : `${currentPlayerUsername}'s Turn`}</div>
                         <div>Room Id: {roomId}</div>
                     </div>
                 </div>

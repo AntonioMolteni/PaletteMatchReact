@@ -3,17 +3,22 @@ import React, { useState } from 'react';
 
 function MultiplayerWelcomeScreen({ onCreateRoom, onJoinRoom }) {
     const [roomIdInput, setRoomIdInput] = useState("");
+    const [username, setUsername] = useState("");
 
     const handleJoinRoom = () => {
-        if (roomIdInput.trim() !== "") {
-            onJoinRoom(roomIdInput); // Pass the entered room ID to the parent component
+        if (roomIdInput.trim() !== "" && username.trim() !== "") {
+            onJoinRoom(roomIdInput, username); // Pass the entered room ID and username to the parent component
         } else {
-            console.log("Please enter a room ID.");
+            console.log("Please enter a room ID and username.");
         }
     };
 
     const handleCreateRoom = () => {
-        onCreateRoom(); // Notify the parent component to create a new room
+        if (username.trim() !== "") {
+            onCreateRoom(username); // Pass the entered username to the parent component
+        } else {
+            console.log("Please enter a username.");
+        }
     };
 
     return (
@@ -26,6 +31,12 @@ function MultiplayerWelcomeScreen({ onCreateRoom, onJoinRoom }) {
                     placeholder="Enter Room ID"
                     value={roomIdInput}
                     onChange={(e) => setRoomIdInput(e.target.value)}
+                />
+                <input
+                    type="text"
+                    placeholder="Enter Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                 />
                 <button onClick={handleJoinRoom}>Join Room</button>
             </div>
