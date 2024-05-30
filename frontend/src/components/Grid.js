@@ -1,7 +1,7 @@
 // Grid.js
 import React, { useEffect, useState } from 'react';
-import InfoBar from './InfoBar'
-
+import InfoBar from './InfoBar';
+import Cell from './Cell';
 
 // Function to calculate luminance of a color
 export function getLuminance(color) {
@@ -12,9 +12,19 @@ export function getLuminance(color) {
     return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255; // Calculate luminance
 }
 
-function Grid({ numRows = 0, numColumns = 0, grid = [], playerSessionId, player=null, playerUsername, currentPlayerSessionId, currentPlayerUsername, goalColor, roomId, onLockScore, }) {
-    // Create an array of rows, each containing cells
-    const rows = [];
+function Grid({
+    numRows = 0,
+    numColumns = 0,
+    grid = [],
+    playerSessionId,
+    player = null,
+    playerUsername,
+    currentPlayerSessionId,
+    currentPlayerUsername,
+    goalColor,
+    roomId,
+    onLockScore,
+}) {
     const [cellSpacing, setCellSpacing] = useState(10);
     const [cellSize, setCellSize] = useState(0);
     useEffect(() => {
@@ -72,6 +82,10 @@ function Grid({ numRows = 0, numColumns = 0, grid = [], playerSessionId, player=
         return () => window.removeEventListener('resize', handleResize);
     }, [numRows, numColumns]);
 
+
+    // Create an array of rows, each containing cells
+    const rows = [];
+
     // InfoBar row
     const infoBarRow = (
         <div key="info-bar" className="row">
@@ -82,53 +96,31 @@ function Grid({ numRows = 0, numColumns = 0, grid = [], playerSessionId, player=
                 goalColor={goalColor}
                 roomId={roomId}
                 onLockScore={onLockScore}
-                
                 cellSize={cellSize}
                 playerColor={player.playerColor}
-                playerScore={player.playerScore}            />
+                playerScore={player.playerScore}
+            />
         </div>
     );
     
     // Push InfoBar row to the rows array
     rows.push(infoBarRow);
-    
-
-    function getCellSize(square) {
-        if (square.occupied) {
-            if (square.row === player.playerRow && square.col === player.playerCol) {
-                return 'User'; // Occupied by current user, make it larger
-            } else {
-                return 'Opponent'; // Occupied by opponent, make it smaller
-            }
-        }
-        return 'normal'; // Not occupied, keep it normal size
-    }
 
     for (let row = 0; row < numRows; row++) {
         const cells = [];
         for (let col = 0; col < numColumns; col++) {
             const index = row * numColumns + col;
             const square = grid[index]; // Get square data from the grid
-            if (square && !square.deleted) { // Ensure square exists and is not deleted
-                let cellClassName = "cell";
-                if (square.occupied) {
-                    cellClassName += " occupied"; // Add a class for occupied cells
-                    cellClassName += `${getCellSize(square)}`; // Add class for size
-                }
-                const hex = <div className="cell-text" style={{ color: getLuminance(square.color) > 0.5 ? 'black' : 'white' }}>{square.color}</div>;
 
-                cells.push(
-                    <div key={index} className={cellClassName} style={{ backgroundColor: square.color }}>
-                        {hex}
-                    </div>
-                );
-            } else {
-                cells.push(
-                    <div key={index} className="cell" style={{ backgroundColor: 'transparent', boxShadow: 'none' }}>
-                        <div className="cell-text"></div>
-                    </div>
-                );
-            }
+            cells.push(
+                <Cell
+                    key={index}
+                    index={index}
+                    square={square}
+                    player={player}
+                    cellSize={cellSize}
+                />
+            );
         }
 
         rows.push(

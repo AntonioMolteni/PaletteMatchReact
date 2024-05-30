@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import * as Colyseus from "colyseus.js";
 import Grid from './Grid';
 
-import '../style/Multiplayer.css';
+import '../style/game.css';
 import MultiplayerWelcomeScreen from './MultiplayerWelcomeScreen';
 
 function Multiplayer() {
@@ -19,9 +19,9 @@ function Multiplayer() {
         const connectToRoom = async () => {
             try {
                 // Connect to the Colyseus server
-                // const client = new Colyseus.Client('ws://10.0.1.31:2567');
+                const client = new Colyseus.Client('ws://10.0.1.170:2567');
                 // const client = new Colyseus.Client('ws://192.168.0.192:2567');
-                const client = new Colyseus.Client('ws://localhost:2567');
+                // const client = new Colyseus.Client('ws://localhost:2567');
 
                 // Join or create a room
                 let room;
@@ -173,7 +173,7 @@ function Multiplayer() {
     return (
         <div>
             {roomState && (
-                <div className="multiplayer">
+                <div className="game">
                     <Grid
                         numRows={roomState.numRows}
                         numColumns={roomState.numColumns}

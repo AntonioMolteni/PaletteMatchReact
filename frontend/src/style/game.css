@@ -1,15 +1,16 @@
-.multiplayer {
+/* game.css */
+.game {
 	position: relative;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	height: 100vh;
-	/* Ensure the container takes up the full viewport height */	
-}
-.grid {
-	padding: 25px
+	/* Ensure the container takes up the full viewport height */
 }
 
+.grid {
+	padding: 25px;
+}
 
 body {
 	overflow: hidden;
@@ -21,8 +22,6 @@ body {
 }
 
 .cell {
-	width: 50px;
-	height: 50px;
 	border-radius: 10px;
 	display: flex;
 	justify-content: center;
@@ -30,7 +29,12 @@ body {
 	box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
 }
 
-.occupiedUser {
+.cell.normal {
+	width: 50px;
+	height: 50px;
+}
+
+.cell.User {
 	transform: scale(1.2);
 	/* Adjust the scale factor as needed */
 	transition: transform 0.1s ease;
@@ -55,7 +59,8 @@ body {
 		/* Target scale */
 	}
 }
-.occupiedOpponent {
+
+.cell.Opponent {
 	transform: scale(0.8);
 	/* Adjust the scale factor as needed */
 	transition: transform 0.3s ease;

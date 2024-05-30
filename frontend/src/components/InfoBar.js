@@ -5,7 +5,8 @@ function InfoBar({ playerSessionId, currentPlayerSessionId, currentPlayerUsernam
     return (
         <div className="info-bar" style={{ padding: 0, display: 'flex', alignItems: 'center' }}> {/* Added display: flex to make children elements horizontal */}
             <div className="goal-cell cell" id="goal-cell" style={{
-                backgroundColor: goalColor
+                backgroundColor: goalColor,
+                boxShadow: `0px 0px 5px ${getLuminance(goalColor) > 0.5 ? 'black' : 'white'}`
             }}>
                 <div className="column">
                     <div className="cell-text" style={{ color: getLuminance(goalColor) > 0.5 ? 'black' : 'white' }}>
