@@ -1,4 +1,3 @@
-/* game.css */
 .game {
 	position: relative;
 	display: flex;
@@ -26,7 +25,6 @@ body {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
 }
 
 .cell.normal {
@@ -35,27 +33,31 @@ body {
 }
 
 .cell.User {
-	transform: scale(1.2);
+	transform: scale(1.15);
 	/* Adjust the scale factor as needed */
-	transition: transform 0.1s ease;
+	transition: none;
 	/* Add transition for smooth scaling effect */
-	animation: pulse 2.1s infinite alternate;
+	animation: pulse 4s infinite alternate;
 	/* Define pulse animation with alternate direction */
+}
+
+.cell.User {
+	animation-delay: 1s;
 }
 
 @keyframes pulse {
 	0% {
-		transform: scale(0.8);
+		transform: scale(1.15);
 		/* Initial scale */
 	}
 
-	20% {
-		transform: scale(1.2);
+	90% {
+		transform: scale(1.15);
 		/* Scale down */
 	}
 
 	100% {
-		transform: scale(1.2);
+		transform: scale(0.8);
 		/* Target scale */
 	}
 }
@@ -86,18 +88,19 @@ body {
 	align-items: center;
 }
 
-.checkmark-button {
+.lock-button {
 	border: none;
 	background: none;
 	cursor: pointer;
 }
 
-.checkmark {
+
+.lock {
 	width: 40px;
 	/* Adjust size as needed */
 	height: 40px;
 	/* Adjust size as needed */
-	stroke: black;
+	stroke: white;
 	stroke-width: 2px;
 	fill: green;
 }

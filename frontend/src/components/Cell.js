@@ -27,7 +27,7 @@ function Cell({ square, index, player, cellSize }) {
     );
 
     return (
-        <div key={index} className={cellClassName} style={{ backgroundColor: square.color, boxShadow: `0px 0px 5px ${getLuminance(square.color) > 0.5 ? 'black' : 'white'}` }}>
+        <div key={index} className={cellClassName} style={{ backgroundColor: square.color, boxShadow: `0.15rem 0.15rem 0px ${getLuminance(square.color) > 0.5 ? 'black' : 'white'}` }}>
             {hex}
         </div>
     );

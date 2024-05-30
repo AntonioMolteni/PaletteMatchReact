@@ -12,7 +12,6 @@ function SinglePlayer() {
   const [grid, setGrid] = useState(initialGrid);
   const [goalColor, setGoalColor] = useState(initialGoalColor); // Initialize goalColor before createInitialPlayer
   const [player, setPlayer] = useState(createInitialPlayer());
-  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [gameOver, setGameOver] = useState(false);
 
   // Function to create initial player state
@@ -106,62 +105,61 @@ function SinglePlayer() {
   }
 
   // Function to handle player movement
-const handleMove = useCallback((direction) => {
-  if (gameOver) return;
+  const handleMove = useCallback((direction) => {
+    if (gameOver) return;
 
-  let newPlayerRow = player.playerRow;
-  let newPlayerCol = player.playerCol;
+    let newPlayerRow = player.playerRow;
+    let newPlayerCol = player.playerCol;
 
-  switch (direction) {
-    case 'left':
-      newPlayerCol -= 1;
-      break;
-    case 'right':
-      newPlayerCol += 1;
-      break;
-    case 'up':
-      newPlayerRow -= 1;
-      break;
-    case 'down':
-      newPlayerRow += 1;
-      break;
-    default:
-      return;
-  }
-
-  const newSquare = grid.find(square => square.row === newPlayerRow && square.col === newPlayerCol);
-
-  // Allow movement into deleted squares as well
-  if (newSquare && !newSquare.occupied && newPlayerRow >= 0 && newPlayerRow < numRows && newPlayerCol >= 0 && newPlayerCol < numColumns) {
-    const updatedGrid = [...grid];
-    const oldSquare = updatedGrid.find(square => square.row === player.playerRow && square.col === player.playerCol);
-
-    oldSquare.occupied = false;
-    newSquare.occupied = true;
-    const mixedColor = mixColors(oldSquare.color, newSquare.color);
-
-    if (!newSquare.deleted) {
-      newSquare.color = mixedColor;
-    } else {
-      newSquare.color = oldSquare.color;
-      newSquare.deleted = false;  // Reactivate the deleted square
+    switch (direction) {
+      case 'left':
+        newPlayerCol -= 1;
+        break;
+      case 'right':
+        newPlayerCol += 1;
+        break;
+      case 'up':
+        newPlayerRow -= 1;
+        break;
+      case 'down':
+        newPlayerRow += 1;
+        break;
+      default:
+        return;
     }
 
-    const newPlayer = {
-      ...player,
-      playerRow: newPlayerRow,
-      playerCol: newPlayerCol,
-      playerColor: newSquare.color,
-      playerScore: calculatePlayerScore(newSquare.color)  // Use new square's color
-    };
+    const newSquare = grid.find(square => square.row === newPlayerRow && square.col === newPlayerCol);
 
-    oldSquare.deleted = true;
+    // Allow movement into deleted squares as well
+    if (newSquare && !newSquare.occupied && newPlayerRow >= 0 && newPlayerRow < numRows && newPlayerCol >= 0 && newPlayerCol < numColumns) {
+      const updatedGrid = [...grid];
+      const oldSquare = updatedGrid.find(square => square.row === player.playerRow && square.col === player.playerCol);
 
-    setGrid(updatedGrid);
-    setPlayer(newPlayer);
-  }
-}, [player, grid, gameOver]);
+      oldSquare.occupied = false;
+      newSquare.occupied = true;
+      const mixedColor = mixColors(oldSquare.color, newSquare.color);
 
+      if (!newSquare.deleted) {
+        newSquare.color = mixedColor;
+      } else {
+        newSquare.color = oldSquare.color;
+        newSquare.deleted = false;  // Reactivate the deleted square
+      }
+
+      const newPlayer = {
+        ...player,
+        playerRow: newPlayerRow,
+        playerCol: newPlayerCol,
+        playerColor: newSquare.color,
+        playerScore: calculatePlayerScore(newSquare.color)  // Use new square's color
+      };
+
+      oldSquare.deleted = true;
+
+      setGrid(updatedGrid);
+      setPlayer(newPlayer);
+    }
+  }, [player, grid, gameOver]);
 
   // Calculate player score
   function calculatePlayerScore(playerColor) {
@@ -220,6 +218,50 @@ const handleMove = useCallback((direction) => {
       setGameOver(true);
     }
   }, [grid]);
+
+  // Swipe handling
+  useEffect(() => {
+    const detectSwipe = (e) => {
+      const touchStartX = e.touches[0].clientX;
+      const touchStartY = e.touches[0].clientY;
+      let touchEndX, touchEndY;
+
+      const touchMoveListener = (moveEvent) => {
+        touchEndX = moveEvent.touches[0].clientX;
+        touchEndY = moveEvent.touches[0].clientY;
+      };
+
+      const touchEndListener = () => {
+        const deltaX = touchEndX - touchStartX;
+        const deltaY = touchEndY - touchStartY;
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+          if (deltaX > 0) {
+            handleMove("right");
+          } else {
+            handleMove("left");
+          }
+        } else {
+          if (deltaY > 0) {
+            handleMove("down");
+          } else {
+            handleMove("up");
+          }
+        }
+
+        document.removeEventListener('touchmove', touchMoveListener);
+        document.removeEventListener('touchend', touchEndListener);
+      };
+
+      document.addEventListener('touchmove', touchMoveListener);
+      document.addEventListener('touchend', touchEndListener);
+    };
+
+    document.addEventListener('touchstart', detectSwipe);
+
+    return () => {
+      document.removeEventListener('touchstart', detectSwipe);
+    };
+  }, [handleMove]);
 
   return (
     <div className="game">
