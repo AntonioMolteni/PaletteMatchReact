@@ -13,21 +13,25 @@ function SinglePlayer() {
   const [goalColor, setGoalColor] = useState(initialGoalColor); // Initialize goalColor before createInitialPlayer
   const [player, setPlayer] = useState(createInitialPlayer());
   const [gameOver, setGameOver] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
 
   // Function to create initial player state
   function createInitialPlayer() {
     const startSquare = findAvailableSquare(initialGrid);
     startSquare.occupied = true;
-    const playerScore = calculatePlayerScore(startSquare.color);
+    const playerPercentage = calculatePlayerPercentage(startSquare.color);
+    const playerScore = calculatePlayerScore(playerPercentage)
     return {
       playerRow: startSquare.row,
       playerCol: startSquare.col,
       playerColor: startSquare.color,
+      playerPercentage: playerPercentage,
       playerScore: playerScore,
       playerUsername: "Player1",
       locked: false,
     };
   }
+  
 
   // Function to find an available square
   function findAvailableSquare(grid) {
@@ -145,13 +149,15 @@ function SinglePlayer() {
         newSquare.color = oldSquare.color;
         newSquare.deleted = false;  // Reactivate the deleted square
       }
-
+      const playerPercentage = calculatePlayerPercentage(newSquare.color)
+      const playerScore = calculatePlayerScore(playerPercentage)
       const newPlayer = {
         ...player,
         playerRow: newPlayerRow,
         playerCol: newPlayerCol,
         playerColor: newSquare.color,
-        playerScore: calculatePlayerScore(newSquare.color)  // Use new square's color
+        playerPercentage: playerPercentage,
+        playerScore: playerScore
       };
 
       oldSquare.deleted = true;
@@ -161,8 +167,8 @@ function SinglePlayer() {
     }
   }, [player, grid, gameOver]);
 
-  // Calculate player score
-  function calculatePlayerScore(playerColor) {
+  // Calculate player percentage
+  function calculatePlayerPercentage(playerColor) {
     const goalRgb = hexToRgb(goalColor);
     const playerRgb = hexToRgb(playerColor);
 
@@ -175,8 +181,14 @@ function SinglePlayer() {
     const maxDifference = Math.sqrt(Math.pow(255, 2) * 3);
     const percentage = Math.max(0, 100 - (colorDifference / maxDifference) * 100);
 
-    return parseFloat(percentage.toFixed(1));
+    return parseFloat(percentage.toFixed(0));
   }
+
+  // Calculate player score
+  function calculatePlayerScore(playerPercentage) {
+    return (Math.max(0, playerPercentage - 89.9)**2).toFixed(0)
+  }
+
 
   // Handle keyboard input
   useEffect(() => {
@@ -211,6 +223,14 @@ function SinglePlayer() {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [handleMove]);
+
+
+    // Function to handle locking the score
+    const handleLockScore = () => {
+        setIsLocked(true); // Lock the game when the button is clicked
+        // Optionally, you can trigger other actions when the game is locked
+    };
+
 
   // Check if the game is over
   useEffect(() => {
