@@ -186,7 +186,7 @@ function SinglePlayer() {
 
   // Calculate player score
   function calculatePlayerScore(playerPercentage) {
-    return (Math.max(0, playerPercentage - 89.9)**2).toFixed(0)
+    return (Math.max(0, (playerPercentage - 80)/2)**2).toFixed(0)
   }
 
 

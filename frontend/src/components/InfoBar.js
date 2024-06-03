@@ -50,9 +50,9 @@ function InfoBar({ playerSessionId, currentPlayerSessionId, currentPlayerUsernam
 
                 <div className="column" style={{ flexDirection: 'row', justifyContent: 'end' }}>
                     <div className="cell-text" style={{ color: textColor }}>
-                        {playerPercentage}%
-                        <br />
-                        {playerScore === '0' ? '×' : playerScore}
+                        {/* {playerPercentage}% */}
+                        {/* <br /> */}
+                        {playerScore} pts 
                     </div>
 
                     <LockButton
