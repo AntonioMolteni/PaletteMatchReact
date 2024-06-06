@@ -71,9 +71,9 @@ export class MyRoom extends Room<MyRoomState> {
           // update playerColor
           this.updatePlayerColor(player);
           // update playerScore
-          const playerScore = this.calculatePlayerScore(player);
-          player.playerScore = playerScore
-
+          const playerPercentage = this.calculatePlayerPercentage(player);
+          player.playerPercentage = playerPercentage
+          player.playerCurrentScore = this.calculatePlayerScore(playerPercentage)
 
           // Delete the old square
           oldSquare.deleted = true
@@ -81,9 +81,9 @@ export class MyRoom extends Room<MyRoomState> {
       }
     });
 
-    this.onMessage("lockScore", (client) => {
-      // Call the method to lock the player's score
-      this.lockPlayerScore(client);
+    this.onMessage("lockPlayer", (client) => {
+      // Call the method to lock the player for this round
+      this.lockPlayer(client);
     });
   }
   
@@ -100,13 +100,14 @@ export class MyRoom extends Room<MyRoomState> {
       const player = new Player(assignedSquare.row, assignedSquare.col, playerUsername);
       if (this.state.isPlayersEmpty()) {
         this.state.currentPlayerSessionId = client.sessionId;
-        this.state.currentPlayerUsername = player.playerUsername
+        this.state.currentPlayerUsername = player.playerUsername;
       }
       this.state.players.set(client.sessionId, player);
       this.state.getSquareAt(assignedSquare.row, assignedSquare.col).occupied = true;
       this.updatePlayerColor(player);
-      const playerScore = this.calculatePlayerScore(player);
-      player.playerScore = playerScore
+      const playerPercentage = this.calculatePlayerPercentage(player);
+      player.playerPercentage = playerPercentage;
+      player.playerCurrentScore = this.calculatePlayerScore(playerPercentage);
     }
   }
 
@@ -171,7 +172,8 @@ export class MyRoom extends Room<MyRoomState> {
     this.disconnect(); // Disconnect all clients and clean up the room
   }
 
-  calculatePlayerScore(player: Player): number {
+
+  calculatePlayerPercentage(player: Player): number {
     const goalColor = this.state.goalColor;
     const playerColor = player.playerColor;
 
@@ -193,6 +195,23 @@ export class MyRoom extends Room<MyRoomState> {
     // Round percentage to one decimal place
     return parseFloat(percentage.toFixed(1));
   }
+
+  calculatePlayerScore(playerPercentage: number): number {
+    // difficulty should be between 0 and 100. 
+    // easy
+    // const difficulty = 85;
+    // medium 
+    const difficulty = 88;
+    // hard
+    // const difficulty = 91;
+
+    const raw_score = playerPercentage - difficulty;
+    // normalization constant to adjust raw score to an interval of 10
+    const norm_const = (100 - difficulty) / 10;
+
+    return Math.round(Math.max(0, (raw_score) / norm_const) ** 2);
+
+  }
   
   updatePlayerColor(player: Player) {
     const playerSquare = this.state.getSquareAt(player.playerRow, player.playerCol);
@@ -200,7 +219,7 @@ export class MyRoom extends Room<MyRoomState> {
     player.playerColor = playerColor;
   }
 
-  lockPlayerScore(client: Client): void {
+  lockPlayer(client: Client): void {
     const player = this.state.players.get(client.sessionId);
     if (player) {
       player.locked = true;

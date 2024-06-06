@@ -1,50 +1,159 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import Grid from './Grid'; // Assuming you have a Grid component for rendering
-import '../style/game.css';
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  getRandomColor,
+  getPseudoRandomColor,
+  hexToRgb,
+  rgbToHex,
+  mixColors,
+} from "./ColorFunctions";
+import Grid from "./Grid";
+import "../style/game.css";
 
 function SinglePlayer() {
   // Initial game state setup
   const numRows = 7;
   const numColumns = 5;
-  const initialGoalColor = getRandomColor();
-  const initialGrid = initializeGrid(numRows, numColumns);
-
-  const [grid, setGrid] = useState(initialGrid);
-  const [goalColor, setGoalColor] = useState(initialGoalColor); // Initialize goalColor before createInitialPlayer
-  const [player, setPlayer] = useState(createInitialPlayer());
+  // Note: Do not call functions inside of useState() using parentheses
+  // Order matters when doing this initialization
+  const [grid, setGrid] = useState(initializeGrid);
+  const [startSquare, setStartSquare] = useState(findAvailableSquare);
+  const [goalColor, setGoalColor] = useState(createInitialGoalColor);
+  const [player, setPlayer] = useState(createInitialPlayer);
   const [gameOver, setGameOver] = useState(false);
-  const [isLocked, setIsLocked] = useState(false);
+  const [lockTriggered, setLockTriggered] = useState(false);
+  // log things here if needed
+  // console.log("player", player);
+  // console.log("start square", startSquare);
 
   // Function to create initial player state
   function createInitialPlayer() {
-    const startSquare = findAvailableSquare(initialGrid);
     startSquare.occupied = true;
     const playerPercentage = calculatePlayerPercentage(startSquare.color);
-    const playerScore = calculatePlayerScore(playerPercentage)
+    const playerCurrentScore = calculatePlayerScore(playerPercentage);
+    const playerTotalScore = 0;
+
     return {
       playerRow: startSquare.row,
       playerCol: startSquare.col,
       playerColor: startSquare.color,
       playerPercentage: playerPercentage,
-      playerScore: playerScore,
+      playerTotalScore: playerTotalScore,
+      playerCurrentScore: playerCurrentScore,
       playerUsername: "Player1",
       locked: false,
     };
   }
-  
+
+  // Function to create initial goal color
+  function createInitialGoalColor() {
+    // Clone the grid to simulate moves
+    const clonedGrid = JSON.parse(JSON.stringify(grid));
+    let currentRow = startSquare.row;
+    let currentCol = startSquare.col;
+    let currentColor = startSquare.color;
+    const directions = ["left", "right", "up", "down"];
+    const numMoves = Math.floor(Math.random() * 5) + 6; // Random number between 6 and 10
+
+    // Array to log the moves
+    const moves = [];
+
+    for (let i = 0; i < numMoves; i++) {
+      const randomDirection =
+        directions[Math.floor(Math.random() * directions.length)];
+      let newRow = currentRow;
+      let newCol = currentCol;
+
+      switch (randomDirection) {
+        case "left":
+          newCol -= 1;
+          break;
+        case "right":
+          newCol += 1;
+          break;
+        case "up":
+          newRow -= 1;
+          break;
+        case "down":
+          newRow += 1;
+          break;
+        default:
+          break;
+      }
+
+      const currentSquare = clonedGrid.find(
+        (square) => square.row === currentRow && square.col === currentCol
+      );
+      const newSquare = clonedGrid.find(
+        (square) => square.row === newRow && square.col === newCol
+      );
+
+      // Check if the new position is valid
+      if (
+        newSquare &&
+        newRow >= 0 &&
+        newRow < numRows &&
+        newCol >= 0 &&
+        newCol < numColumns
+      ) {
+        var mixedColor = "";
+        if (!newSquare.deleted) {
+          mixedColor = mixColors(currentColor, newSquare.color);
+        } else {
+          mixedColor = currentColor;
+        }
+
+        currentSquare.deleted = true;
+
+        currentColor = mixedColor;
+        currentRow = newRow;
+        currentCol = newCol;
+
+        // Log the move
+        moves.push({
+          direction: randomDirection,
+          newRow,
+          newCol,
+          newColor: mixedColor,
+        });
+      } else {
+        i--;
+      }
+    }
+
+    // Function to remove unnecessary moves at the end of the array
+    function cleanUpMoves(moves) {
+      let lastColor = moves[numMoves - 1].newColor;
+
+      for (let i = numMoves - 2; i >= 0; i--) {
+        if (lastColor === moves[i].newColor) {
+          moves.pop();
+        } else {
+          break;
+        }
+      }
+      // Iterate from the end of the moves array
+    }
+
+    cleanUpMoves(moves);
+    console.log("moves", moves); // You can log the moves array to see the logged moves
+    // You can log the moves array to see the logged moves
+    return currentColor;
+  }
 
   // Function to find an available square
-  function findAvailableSquare(grid) {
-    const availableSquares = grid.filter(square => !square.occupied && !square.deleted);
+  function findAvailableSquare() {
+    const availableSquares = grid.filter(
+      (square) => !square.occupied && !square.deleted
+    );
     const randomIndex = Math.floor(Math.random() * availableSquares.length);
     return availableSquares[randomIndex];
   }
 
   // Function to initialize grid with random colors
-  function initializeGrid(rows, columns) {
+  function initializeGrid() {
     const grid = [];
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < columns; col++) {
+    for (let row = 0; row < numRows; row++) {
+      for (let col = 0; col < numColumns; col++) {
         grid.push({
           row: row,
           col: col,
@@ -57,115 +166,79 @@ function SinglePlayer() {
     return grid;
   }
 
-  // Helper functions to generate colors
-  function getRandomColor() {
-    const letters = '0123456789abcdef';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-  }
-
-  function getPseudoRandomColor() {
-    const letters = '0123456789abcdef';
-    const colors = ['#ff0000', '#0000ff', '#00ff00', '#000000', '#ffffff', '#00ffff', '#ff00ff', '#ffff00'];
-    const probability = 1 / 3;
-
-    if (Math.random() < probability) {
-      return colors[Math.floor(Math.random() * colors.length)];
-    } else {
-      let color = '#';
-      for (let i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * 16)];
-      }
-      return color;
-    }
-  }
-
-  // Helper functions for color manipulation
-  function hexToRgb(hex) {
-    const bigint = parseInt(hex.replace("#", ""), 16);
-    return {
-      r: (bigint >> 16) & 255,
-      g: (bigint >> 8) & 255,
-      b: bigint & 255
-    };
-  }
-
-  function rgbToHex(r, g, b) {
-    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-  }
-
-  function mixColors(color1, color2) {
-    const rgb1 = hexToRgb(color1);
-    const rgb2 = hexToRgb(color2);
-
-    const mixedR = Math.round((rgb1.r + rgb2.r) / 2);
-    const mixedG = Math.round((rgb1.g + rgb2.g) / 2);
-    const mixedB = Math.round((rgb1.b + rgb2.b) / 2);
-
-    return rgbToHex(mixedR, mixedG, mixedB);
-  }
-
   // Function to handle player movement
-  const handleMove = useCallback((direction) => {
-    if (gameOver) return;
+  const handleMove = useCallback(
+    (direction) => {
+      if (gameOver) return;
 
-    let newPlayerRow = player.playerRow;
-    let newPlayerCol = player.playerCol;
+      let newPlayerRow = player.playerRow;
+      let newPlayerCol = player.playerCol;
 
-    switch (direction) {
-      case 'left':
-        newPlayerCol -= 1;
-        break;
-      case 'right':
-        newPlayerCol += 1;
-        break;
-      case 'up':
-        newPlayerRow -= 1;
-        break;
-      case 'down':
-        newPlayerRow += 1;
-        break;
-      default:
-        return;
-    }
-
-    const newSquare = grid.find(square => square.row === newPlayerRow && square.col === newPlayerCol);
-
-    // Allow movement into deleted squares as well
-    if (newSquare && !newSquare.occupied && newPlayerRow >= 0 && newPlayerRow < numRows && newPlayerCol >= 0 && newPlayerCol < numColumns) {
-      const updatedGrid = [...grid];
-      const oldSquare = updatedGrid.find(square => square.row === player.playerRow && square.col === player.playerCol);
-
-      oldSquare.occupied = false;
-      newSquare.occupied = true;
-      const mixedColor = mixColors(oldSquare.color, newSquare.color);
-
-      if (!newSquare.deleted) {
-        newSquare.color = mixedColor;
-      } else {
-        newSquare.color = oldSquare.color;
-        newSquare.deleted = false;  // Reactivate the deleted square
+      switch (direction) {
+        case "left":
+          newPlayerCol -= 1;
+          break;
+        case "right":
+          newPlayerCol += 1;
+          break;
+        case "up":
+          newPlayerRow -= 1;
+          break;
+        case "down":
+          newPlayerRow += 1;
+          break;
+        default:
+          return;
       }
-      const playerPercentage = calculatePlayerPercentage(newSquare.color)
-      const playerScore = calculatePlayerScore(playerPercentage)
-      const newPlayer = {
-        ...player,
-        playerRow: newPlayerRow,
-        playerCol: newPlayerCol,
-        playerColor: newSquare.color,
-        playerPercentage: playerPercentage,
-        playerScore: playerScore
-      };
 
-      oldSquare.deleted = true;
+      const newSquare = grid.find(
+        (square) => square.row === newPlayerRow && square.col === newPlayerCol
+      );
 
-      setGrid(updatedGrid);
-      setPlayer(newPlayer);
-    }
-  }, [player, grid, gameOver]);
+      // Allow movement into deleted squares as well
+      if (
+        newSquare &&
+        !newSquare.occupied &&
+        newPlayerRow >= 0 &&
+        newPlayerRow < numRows &&
+        newPlayerCol >= 0 &&
+        newPlayerCol < numColumns
+      ) {
+        const updatedGrid = [...grid];
+        const oldSquare = updatedGrid.find(
+          (square) =>
+            square.row === player.playerRow && square.col === player.playerCol
+        );
+
+        oldSquare.occupied = false;
+        newSquare.occupied = true;
+        const mixedColor = mixColors(oldSquare.color, newSquare.color);
+
+        if (!newSquare.deleted) {
+          newSquare.color = mixedColor;
+        } else {
+          newSquare.color = oldSquare.color;
+          newSquare.deleted = false; // Reactivate the deleted square
+        }
+        const playerPercentage = calculatePlayerPercentage(newSquare.color);
+        const playerCurrentScore = calculatePlayerScore(playerPercentage);
+        const newPlayer = {
+          ...player,
+          playerRow: newPlayerRow,
+          playerCol: newPlayerCol,
+          playerColor: newSquare.color,
+          playerPercentage: playerPercentage,
+          playerCurrentScore: playerCurrentScore,
+        };
+
+        oldSquare.deleted = true;
+
+        setGrid(updatedGrid);
+        setPlayer(newPlayer);
+      }
+    },
+    [player, grid, gameOver]
+  );
 
   // Calculate player percentage
   function calculatePlayerPercentage(playerColor) {
@@ -174,43 +247,69 @@ function SinglePlayer() {
 
     const colorDifference = Math.sqrt(
       Math.pow(goalRgb.r - playerRgb.r, 2) +
-      Math.pow(goalRgb.g - playerRgb.g, 2) +
-      Math.pow(goalRgb.b - playerRgb.b, 2)
+        Math.pow(goalRgb.g - playerRgb.g, 2) +
+        Math.pow(goalRgb.b - playerRgb.b, 2)
     );
 
     const maxDifference = Math.sqrt(Math.pow(255, 2) * 3);
-    const percentage = Math.max(0, 100 - (colorDifference / maxDifference) * 100);
+    const percentage = Math.max(
+      0,
+      100 - (colorDifference / maxDifference) * 100
+    );
 
     return parseFloat(percentage.toFixed(0));
   }
 
   // Calculate player score
-  function calculatePlayerScore(playerPercentage) {
-    return (Math.max(0, (playerPercentage - 80)/2)**2).toFixed(0)
-  }
 
+  function calculatePlayerScore(playerPercentage) {
+    // difficulty should be between 0 and 100.
+    // easy
+    const difficulty = 92;
+    // medium
+    // const difficulty = 95;
+    // hard
+    // const difficulty = 95;
+
+    const raw_score = playerPercentage - difficulty;
+    // normalization constant to adjust raw score to an interval of 10
+    const norm_const = (100 - difficulty) / 10;
+
+    return Math.round(Math.max(0, raw_score / norm_const) ** 2);
+  }
 
   // Handle keyboard input
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd'].includes(e.key)) {
+      if (
+        [
+          "ArrowUp",
+          "ArrowDown",
+          "ArrowLeft",
+          "ArrowRight",
+          "w",
+          "a",
+          "s",
+          "d",
+        ].includes(e.key)
+      ) {
         e.preventDefault();
         switch (e.key) {
-          case 'ArrowUp':
-          case 'w':
-            handleMove('up');
+          case "ArrowUp":
+          case "w":
+            handleMove("up");
             break;
-          case 'ArrowDown':
-          case 's':
-            handleMove('down');
+          case "ArrowDown":
+          case "s":
+            handleMove("down");
             break;
-          case 'ArrowLeft':
-          case 'a':
-            handleMove('left');
+          case "ArrowLeft":
+          case "a":
+            handleMove("left");
             break;
-          case 'ArrowRight':
-          case 'd':
-            handleMove('right');
+          case "ArrowRight":
+          case "d":
+            handleMove("right");
             break;
           default:
             break;
@@ -218,23 +317,48 @@ function SinglePlayer() {
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [handleMove]);
 
+  const handleLock = useCallback(() => {
+    setLockTriggered(true);
+    setGrid(initializeGrid);
+  }, []);
 
-    // Function to handle locking the score
-    const handleLockScore = () => {
-        setIsLocked(true); // Lock the game when the button is clicked
-        // Optionally, you can trigger other actions when the game is locked
-    };
+  useEffect(() => {
+    if (lockTriggered) {
+      const newStartSquare = findAvailableSquare();
+      newStartSquare.occupied = true;
+      setStartSquare(newStartSquare);
+    }
+  }, [lockTriggered, grid]);
 
+  useEffect(() => {
+    if (lockTriggered && startSquare) {
+      setGoalColor(createInitialGoalColor);
+
+      setPlayer((prevPlayer) => ({
+        ...prevPlayer,
+        playerCol: startSquare.col,
+        playerRow: startSquare.row,
+        playerColor: startSquare.color,
+        playerCurrentScore: calculatePlayerScore(
+          calculatePlayerPercentage(startSquare.color)
+        ),
+        playerTotalScore:
+          prevPlayer.playerTotalScore + prevPlayer.playerCurrentScore,
+      }));
+
+      setLockTriggered(false);
+    }
+  }, [startSquare]);
 
   // Check if the game is over
   useEffect(() => {
-    if (grid.every(square => square.deleted)) {
+    if (grid.every((square) => square.deleted)) {
       setGameOver(true);
     }
   }, [grid]);
@@ -268,18 +392,18 @@ function SinglePlayer() {
           }
         }
 
-        document.removeEventListener('touchmove', touchMoveListener);
-        document.removeEventListener('touchend', touchEndListener);
+        document.removeEventListener("touchmove", touchMoveListener);
+        document.removeEventListener("touchend", touchEndListener);
       };
 
-      document.addEventListener('touchmove', touchMoveListener);
-      document.addEventListener('touchend', touchEndListener);
+      document.addEventListener("touchmove", touchMoveListener);
+      document.addEventListener("touchend", touchEndListener);
     };
 
-    document.addEventListener('touchstart', detectSwipe);
+    document.addEventListener("touchstart", detectSwipe);
 
     return () => {
-      document.removeEventListener('touchstart', detectSwipe);
+      document.removeEventListener("touchstart", detectSwipe);
     };
   }, [handleMove]);
 
@@ -296,6 +420,7 @@ function SinglePlayer() {
         currentPlayerSessionId={"single-player"}
         currentPlayerUsername={player.playerUsername}
         goalColor={goalColor}
+        onLock={handleLock}
       />
     </div>
   );

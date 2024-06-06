@@ -32,6 +32,8 @@ body {
 	height: 50px;
 }
 
+
+
 .cell.User {
 	transform: scale(1.15);
 	/* Adjust the scale factor as needed */

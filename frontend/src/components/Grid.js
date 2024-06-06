@@ -23,8 +23,8 @@ function Grid({
     currentPlayerUsername,
     goalColor,
     roomId,
-    onLockScore,
-    isLocked
+    onLock,
+    
 }) {
     const [cellSpacing, setCellSpacing] = useState(10);
     const [cellSize, setCellSize] = useState(0);
@@ -96,12 +96,12 @@ function Grid({
                 currentPlayerUsername={currentPlayerUsername}
                 goalColor={goalColor}
                 roomId={roomId}
-                onLockScore={onLockScore}
+                onLock={onLock}
                 cellSize={cellSize}
                 playerColor={player.playerColor}
                 playerPercentage={player.playerPercentage}
-                playerScore={player.playerScore}
-                isLocked={true }
+                playerCurrentScore={player.playerCurrentScore}
+                playerTotalScore={player.playerTotalScore}
             />
         </div>
     );

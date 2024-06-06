@@ -19,7 +19,7 @@ function Multiplayer() {
         const connectToRoom = async () => {
             try {
                 // Connect to the Colyseus server
-                const client = new Colyseus.Client('ws://10.0.1.170:2567');
+                const client = new Colyseus.Client('ws://10.0.1.179:2567');
                 // const client = new Colyseus.Client('ws://192.168.0.192:2567');
                 // const client = new Colyseus.Client('ws://localhost:2567');
 
@@ -65,10 +65,10 @@ function Multiplayer() {
         };
     }, [joinRoomId]); // Run effect only once on component mount
 
-    const lockScore = () => {
+    const lockPlayer = () => {
         // Send a message to the room to lock the score
         if (room) {
-            room.send("lockScore");
+            room.send("lockPlayer");
         }
     };
 
@@ -185,7 +185,8 @@ function Multiplayer() {
                         currentPlayerUsername={roomState.currentPlayerUsername}
                         goalColor={roomState.goalColor}
                         roomId={room.id}
-                        onLockScore = {lockScore}
+                        onLock={lockPlayer}
+                        isLocked={false}
                     />
                 </div>
             )}

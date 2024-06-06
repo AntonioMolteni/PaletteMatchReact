@@ -4,7 +4,9 @@ export class Player extends Schema {
   @type("number") playerRow: number;
   @type("number") playerCol: number;
   @type("string") playerColor = "#ffffff";
-  @type("number") playerScore = 0;
+  @type("number") playerPercentage = 0;
+  @type("number") playerCurrentScore = 0;
+  @type("number") playerTotalScore = 0;
   @type("string") playerUsername = ""
   @type("boolean") locked: boolean;
 
