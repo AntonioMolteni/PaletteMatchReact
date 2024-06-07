@@ -14,6 +14,7 @@ function InfoBar({
   playerPercentage,
   playerCurrentScore,
   playerTotalScore,
+  playerMovesLeft,
   onLock,
 }) {
   const barLuminance = goalColor ? getLuminance(goalColor) : 0;
@@ -53,10 +54,12 @@ function InfoBar({
           // Single Player Information
           <div
             className="column"
-            style={{ flexDirection: "row", justifyContent: "start" }}
+            style={{ flexDirection: "row", justifyContent: "center" }}
           >
             <div className="cell-text" style={{ color: textColor }}>
-              {playerTotalScore}
+              Total Score: {playerTotalScore}
+              <br />
+              Moves Left: {playerMovesLeft}
             </div>
           </div>
         )}
@@ -71,7 +74,7 @@ function InfoBar({
           className="column"
           style={{ flexDirection: "row", justifyContent: "end" }}
         >
-          {playerCurrentScore > 0.5 ? (
+          {playerCurrentScore > 0 ? (
             <>
               <div className="cell-text" style={{ color: textColor }}>
                 {playerCurrentScore} pts
@@ -89,7 +92,7 @@ function InfoBar({
           ) : (
             <>
               <div className="cell-text" style={{ color: textColor }}>
-                Not Close Enough
+                No Match
               </div>
               <div className="cell-text" style={{ color: textColor }}>
                 <Circle

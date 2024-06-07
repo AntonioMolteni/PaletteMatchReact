@@ -1,3 +1,4 @@
+/* game.css */
 .game {
 	position: relative;
 	display: flex;
@@ -39,13 +40,10 @@ body {
 	/* Adjust the scale factor as needed */
 	transition: none;
 	/* Add transition for smooth scaling effect */
-	animation: pulse 4s infinite alternate;
+	animation: pulse 3s infinite alternate;
 	/* Define pulse animation with alternate direction */
 }
 
-.cell.User {
-	animation-delay: 1s;
-}
 
 @keyframes pulse {
 	0% {

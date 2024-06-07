@@ -1,3 +1,4 @@
+// SinglePlayer.js
 import React, { useState, useEffect, useCallback } from "react";
 import {
   getRandomColor,
@@ -13,12 +14,14 @@ function SinglePlayer() {
   // Initial game state setup
   const numRows = 7;
   const numColumns = 5;
+  const defaultMovesLeft = 20;
   // Note: Do not call functions inside of useState() using parentheses
   // Order matters when doing this initialization
   const [grid, setGrid] = useState(initializeGrid);
   const [startSquare, setStartSquare] = useState(findAvailableSquare);
   const [goalColor, setGoalColor] = useState(createInitialGoalColor);
   const [player, setPlayer] = useState(createInitialPlayer);
+  const [lockMoves, setLockMoves] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [lockTriggered, setLockTriggered] = useState(false);
   // log things here if needed
@@ -31,6 +34,7 @@ function SinglePlayer() {
     const playerPercentage = calculatePlayerPercentage(startSquare.color);
     const playerCurrentScore = calculatePlayerScore(playerPercentage);
     const playerTotalScore = 0;
+    const playerMovesLeft = defaultMovesLeft;
 
     return {
       playerRow: startSquare.row,
@@ -38,6 +42,7 @@ function SinglePlayer() {
       playerColor: startSquare.color,
       playerPercentage: playerPercentage,
       playerTotalScore: playerTotalScore,
+      playerMovesLeft: playerMovesLeft,
       playerCurrentScore: playerCurrentScore,
       playerUsername: "Player1",
       locked: false,
@@ -52,7 +57,7 @@ function SinglePlayer() {
     let currentCol = startSquare.col;
     let currentColor = startSquare.color;
     const directions = ["left", "right", "up", "down"];
-    const numMoves = Math.floor(Math.random() * 5) + 6; // Random number between 6 and 10
+    const numMoves = Math.floor(Math.random() * 5) + 3; // Random number between 3 and 7
 
     // Array to log the moves
     const moves = [];
@@ -135,18 +140,27 @@ function SinglePlayer() {
     }
 
     cleanUpMoves(moves);
+    if (moves.length < 4) {
+      return createInitialGoalColor();
+    }
+
     console.log("moves", moves); // You can log the moves array to see the logged moves
     // You can log the moves array to see the logged moves
     return currentColor;
   }
 
   // Function to find an available square
-  function findAvailableSquare() {
-    const availableSquares = grid.filter(
-      (square) => !square.occupied && !square.deleted
-    );
-    const randomIndex = Math.floor(Math.random() * availableSquares.length);
-    return availableSquares[randomIndex];
+  function findAvailableSquare(row, col) {
+    if (row && col) {
+      const index = row * numColumns + col;
+      return grid[index];
+    } else {
+      const availableSquares = grid.filter(
+        (square) => !square.occupied && !square.deleted
+      );
+      const randomIndex = Math.floor(Math.random() * availableSquares.length);
+      return availableSquares[randomIndex];
+    }
   }
 
   // Function to initialize grid with random colors
@@ -169,7 +183,7 @@ function SinglePlayer() {
   // Function to handle player movement
   const handleMove = useCallback(
     (direction) => {
-      if (gameOver) return;
+      if (lockMoves) return;
 
       let newPlayerRow = player.playerRow;
       let newPlayerCol = player.playerCol;
@@ -229,6 +243,7 @@ function SinglePlayer() {
           playerColor: newSquare.color,
           playerPercentage: playerPercentage,
           playerCurrentScore: playerCurrentScore,
+          playerMovesLeft: player.playerMovesLeft - 1,
         };
 
         oldSquare.deleted = true;
@@ -260,16 +275,15 @@ function SinglePlayer() {
     return parseFloat(percentage.toFixed(0));
   }
 
-  // Calculate player score
-
+  // Calculate player score and returns a integer betweeen 0 and 1
   function calculatePlayerScore(playerPercentage) {
     // difficulty should be between 0 and 100.
-    // easy
-    const difficulty = 92;
+    // easy (playable)
+    const difficulty = 90;
     // medium
-    // const difficulty = 95;
+    // const difficulty = 91;
     // hard
-    // const difficulty = 95;
+    // const difficulty = 92;
 
     const raw_score = playerPercentage - difficulty;
     // normalization constant to adjust raw score to an interval of 10
@@ -324,13 +338,34 @@ function SinglePlayer() {
   }, [handleMove]);
 
   const handleLock = useCallback(() => {
-    setLockTriggered(true);
-    setGrid(initializeGrid);
-  }, []);
+    // double check that their score is not zero, otherwise could press enter to refresh board
+    if (player.playerCurrentScore > 0) {
+      setLockTriggered(true);
+      setGrid(initializeGrid);
+    }
+  }, [player.playerCurrentScore]);
+
+  // Can also press enter instead to trigger the lock
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Enter") {
+        handleLock();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    // Cleanup the event listener on component unmount
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [handleLock]);
 
   useEffect(() => {
     if (lockTriggered) {
-      const newStartSquare = findAvailableSquare();
+      const row = player.playerRow;
+      const col = player.playerCol;
+      const newStartSquare = findAvailableSquare(row, col);
       newStartSquare.occupied = true;
       setStartSquare(newStartSquare);
     }
@@ -350,6 +385,7 @@ function SinglePlayer() {
         ),
         playerTotalScore:
           prevPlayer.playerTotalScore + prevPlayer.playerCurrentScore,
+        playerMovesLeft: defaultMovesLeft,
       }));
 
       setLockTriggered(false);
@@ -358,7 +394,10 @@ function SinglePlayer() {
 
   // Check if the game is over
   useEffect(() => {
-    if (grid.every((square) => square.deleted)) {
+    if (player.playerMovesLeft <= 0) {
+      setLockMoves(true);
+    }
+    if (player.playerMovesLeft <= 0 && player.playerCurrentScore === 0) {
       setGameOver(true);
     }
   }, [grid]);
