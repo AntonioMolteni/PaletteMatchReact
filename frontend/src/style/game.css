@@ -1,4 +1,9 @@
 /* game.css */
+:root {
+	/*  make sure to update movement delay in singlePlayer.js if this is changed*/
+	--movement-delay: 200ms;
+}
+
 .game {
 	position: relative;
 	display: flex;
@@ -33,40 +38,98 @@ body {
 	height: 50px;
 }
 
-
-
-.cell.User {
-	transform: scale(1.15);
-	/* Adjust the scale factor as needed */
-	transition: none;
-	/* Add transition for smooth scaling effect */
-	animation: pulse 3s infinite alternate;
-	/* Define pulse animation with alternate direction */
+.cell.Opponent {
+	transform: scale(0.8);
+	transition: transform 0.3s ease;
 }
 
+.cell.User {
+	transform: scale(1.15) 1s ease;
+	/* Add transition for smooth scaling effect */
+	animation: enlargeSlightly ease, pulse infinite alternate;
+	/* Define pulse animation with alternate direction */
+	animation-duration: var(--movement-delay), 2.5s;
+	animation-delay: 0s, var(--movement-delay);
+}
+
+@keyframes enlargeSlightly {
+	0% {
+		transform: scale(1);
+	}
+	100% {
+		transform: scale(1.15);
+	}
+}
 
 @keyframes pulse {
 	0% {
 		transform: scale(1.15);
-		/* Initial scale */
 	}
-
 	90% {
 		transform: scale(1.15);
-		/* Scale down */
 	}
-
 	100% {
 		transform: scale(0.8);
-		/* Target scale */
 	}
 }
 
-.cell.Opponent {
-	transform: scale(0.8);
-	/* Adjust the scale factor as needed */
-	transition: transform 0.3s ease;
-	/* Add transition for smooth scaling effect */
+.cell.Moving_up {
+	z-index: -1;
+	animation: moving_up var(--movement-delay) 1;
+}
+
+@keyframes moving_up {
+	0% {
+		transform: translate(0);
+	}
+	100% {
+		transform: translateY(-111%);
+	}
+}
+
+.cell.Moving_down {
+	z-index: -1;
+	animation: moving_down var(--movement-delay) 1;
+}
+
+@keyframes moving_down {
+	0% {
+		transform: translate(0);
+	}
+
+	100% {
+		transform: translateY(111%);
+	}
+}
+
+.cell.Moving_right {
+	z-index: -1;
+	animation: moving_right var(--movement-delay) 1;
+}
+
+@keyframes moving_right {
+	0% {
+		transform: translate(0);
+	}
+
+	100% {
+		transform: translateX(111%);
+	}
+}
+
+.cell.Moving_left {
+	z-index: -1;
+	animation: moving_left var(--movement-delay) 1;
+}
+
+@keyframes moving_left {
+	0% {
+		transform: translate(0);
+	}
+
+	100% {
+		transform: translateX(-111%);
+	}
 }
 
 .goal-cell {

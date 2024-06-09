@@ -11,10 +11,19 @@ import Grid from "./Grid";
 import "../style/game.css";
 
 function SinglePlayer() {
+  // difficulty should be between 0 and 100.
+  // easy (playable)
+  // const difficulty = 90;
+  // medium
+  const difficulty = 91;
+  // hard
+  // const difficulty = 92;
   // Initial game state setup
   const numRows = 7;
   const numColumns = 5;
-  const defaultMovesLeft = 20;
+  const defaultMovesLeft = 15;
+  // 190ms slightly less the length of animation in game.css
+  const movementDelay = 190;
   // Note: Do not call functions inside of useState() using parentheses
   // Order matters when doing this initialization
   const [grid, setGrid] = useState(initializeGrid);
@@ -22,11 +31,14 @@ function SinglePlayer() {
   const [goalColor, setGoalColor] = useState(createInitialGoalColor);
   const [player, setPlayer] = useState(createInitialPlayer);
   const [lockMoves, setLockMoves] = useState(false);
+  const [isMoving, setIsMoving] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [lockTriggered, setLockTriggered] = useState(false);
+
   // log things here if needed
   // console.log("player", player);
   // console.log("start square", startSquare);
+  // console.log("grid", grid);
 
   // Function to create initial player state
   function createInitialPlayer() {
@@ -140,7 +152,7 @@ function SinglePlayer() {
     }
 
     cleanUpMoves(moves);
-    if (moves.length < 4) {
+    if (moves.length < 6) {
       return createInitialGoalColor();
     }
 
@@ -174,6 +186,7 @@ function SinglePlayer() {
           color: getPseudoRandomColor(),
           deleted: false,
           occupied: false,
+          directionMoving: "",
         });
       }
     }
@@ -183,6 +196,7 @@ function SinglePlayer() {
   // Function to handle player movement
   const handleMove = useCallback(
     (direction) => {
+      setIsMoving(true);
       if (lockMoves) return;
 
       let newPlayerRow = player.playerRow;
@@ -225,14 +239,16 @@ function SinglePlayer() {
         );
 
         oldSquare.occupied = false;
-        newSquare.occupied = true;
-        const mixedColor = mixColors(oldSquare.color, newSquare.color);
+        setLockMoves(true);
 
+        oldSquare.directionMoving = direction;
+        const mixedColor = mixColors(oldSquare.color, newSquare.color);
+        var newMovesLeft = player.playerMovesLeft;
         if (!newSquare.deleted) {
           newSquare.color = mixedColor;
+          newMovesLeft -= 1;
         } else {
           newSquare.color = oldSquare.color;
-          newSquare.deleted = false; // Reactivate the deleted square
         }
         const playerPercentage = calculatePlayerPercentage(newSquare.color);
         const playerCurrentScore = calculatePlayerScore(playerPercentage);
@@ -243,12 +259,22 @@ function SinglePlayer() {
           playerColor: newSquare.color,
           playerPercentage: playerPercentage,
           playerCurrentScore: playerCurrentScore,
-          playerMovesLeft: player.playerMovesLeft - 1,
+          playerMovesLeft: newMovesLeft,
         };
 
-        oldSquare.deleted = true;
+        setTimeout(() => {
+          oldSquare.directionMoving = "";
+          setGrid(updatedGrid);
+          oldSquare.deleted = true;
+          if (player.playerMovesLeft > 1) {
+            setLockMoves(false);
+          }
+          newSquare.occupied = true;
+          if (newSquare.deleted) {
+            newSquare.deleted = false; // Reactivate the deleted square if the square is not already activated
+          }
+        }, movementDelay);
 
-        setGrid(updatedGrid);
         setPlayer(newPlayer);
       }
     },
@@ -276,20 +302,18 @@ function SinglePlayer() {
   }
 
   // Calculate player score and returns a integer betweeen 0 and 1
-  function calculatePlayerScore(playerPercentage) {
-    // difficulty should be between 0 and 100.
-    // easy (playable)
-    const difficulty = 90;
-    // medium
-    // const difficulty = 91;
-    // hard
-    // const difficulty = 92;
-
-    const raw_score = playerPercentage - difficulty;
-    // normalization constant to adjust raw score to an interval of 10
-    const norm_const = (100 - difficulty) / 10;
-
-    return Math.round(Math.max(0, raw_score / norm_const) ** 2);
+  function calculatePlayerScore(x) {
+    var score = 0;
+    if (x <= 90) {
+      score = 0;
+    } else if (x >= 90 && x <= 95) {
+      score = 1;
+    } else if (x > 95) {
+      score = (99 / 5 ** 2) * Math.pow(x - 95, 2) + 1;
+    } else {
+      score = 0;
+    }
+    return Math.round(score);
   }
 
   // Handle keyboard input
@@ -340,6 +364,8 @@ function SinglePlayer() {
   const handleLock = useCallback(() => {
     // double check that their score is not zero, otherwise could press enter to refresh board
     if (player.playerCurrentScore > 0) {
+      // CHECK IF IS MOVING BEFORE RUNNING HANDLELOCK
+      setLockMoves(true);
       setLockTriggered(true);
       setGrid(initializeGrid);
     }
@@ -387,7 +413,7 @@ function SinglePlayer() {
           prevPlayer.playerTotalScore + prevPlayer.playerCurrentScore,
         playerMovesLeft: defaultMovesLeft,
       }));
-
+      setLockMoves(false);
       setLockTriggered(false);
     }
   }, [startSquare]);
@@ -400,7 +426,7 @@ function SinglePlayer() {
     if (player.playerMovesLeft <= 0 && player.playerCurrentScore === 0) {
       setGameOver(true);
     }
-  }, [grid]);
+  }, [player]);
 
   // Swipe handling
   useEffect(() => {

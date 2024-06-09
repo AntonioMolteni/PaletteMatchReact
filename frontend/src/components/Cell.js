@@ -23,6 +23,10 @@ function Cell({ square, index, player, cellSize }) {
       cellClassName += " Opponent"; // Occupied by opponent
     }
   }
+  // sliding animation & direction class;
+  if (square.directionMoving !== "") {
+    cellClassName += " Moving_" + square.directionMoving;
+  }
 
   const hex = (
     <div
