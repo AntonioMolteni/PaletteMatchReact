@@ -6,6 +6,7 @@ import {
   hexToRgb,
   rgbToHex,
   mixColors,
+  calculateColorSimilarity,
 } from "./ColorFunctions";
 import Grid from "./Grid";
 import "../style/game.css";
@@ -39,11 +40,15 @@ function SinglePlayer() {
   // console.log("player", player);
   // console.log("start square", startSquare);
   // console.log("grid", grid);
+  // console.log("lockmoves", lockMoves);
 
   // Function to create initial player state
   function createInitialPlayer() {
     startSquare.occupied = true;
-    const playerPercentage = calculatePlayerPercentage(startSquare.color);
+    const playerPercentage = calculateColorSimilarity(
+      startSquare.color,
+      goalColor
+    );
     const playerCurrentScore = calculatePlayerScore(playerPercentage);
     const playerTotalScore = 0;
     const playerMovesLeft = defaultMovesLeft;
@@ -196,8 +201,9 @@ function SinglePlayer() {
   // Function to handle player movement
   const handleMove = useCallback(
     (direction) => {
+      if (lockMoves || gameOver) return;
       setIsMoving(true);
-      if (lockMoves) return;
+      setLockMoves(true);
 
       let newPlayerRow = player.playerRow;
       let newPlayerCol = player.playerCol;
@@ -223,7 +229,6 @@ function SinglePlayer() {
         (square) => square.row === newPlayerRow && square.col === newPlayerCol
       );
 
-      // Allow movement into deleted squares as well
       if (
         newSquare &&
         !newSquare.occupied &&
@@ -239,8 +244,6 @@ function SinglePlayer() {
         );
 
         oldSquare.occupied = false;
-        setLockMoves(true);
-
         oldSquare.directionMoving = direction;
         const mixedColor = mixColors(oldSquare.color, newSquare.color);
         var newMovesLeft = player.playerMovesLeft;
@@ -250,66 +253,62 @@ function SinglePlayer() {
         } else {
           newSquare.color = oldSquare.color;
         }
-        const playerPercentage = calculatePlayerPercentage(newSquare.color);
+        const playerPercentage = calculateColorSimilarity(
+          newSquare.color,
+          goalColor
+        );
         const playerCurrentScore = calculatePlayerScore(playerPercentage);
-        const newPlayer = {
-          ...player,
+
+        setTimeout(() => {
+          oldSquare.directionMoving = "";
+          setGrid((prevGrid) => {
+            const newGrid = [...prevGrid];
+            const updatedOldSquare = newGrid.find(
+              (square) =>
+                square.row === player.playerRow &&
+                square.col === player.playerCol
+            );
+            const updatedNewSquare = newGrid.find(
+              (square) =>
+                square.row === newPlayerRow && square.col === newPlayerCol
+            );
+            updatedOldSquare.deleted = true;
+            updatedNewSquare.occupied = true;
+            if (updatedNewSquare.deleted) {
+              updatedNewSquare.deleted = false;
+            }
+            return newGrid;
+          });
+          setIsMoving(false);
+          setLockMoves(false);
+        }, movementDelay);
+
+        setPlayer((prevPlayer) => ({
+          ...prevPlayer,
           playerRow: newPlayerRow,
           playerCol: newPlayerCol,
           playerColor: newSquare.color,
           playerPercentage: playerPercentage,
           playerCurrentScore: playerCurrentScore,
           playerMovesLeft: newMovesLeft,
-        };
-
-        setTimeout(() => {
-          oldSquare.directionMoving = "";
-          setGrid(updatedGrid);
-          oldSquare.deleted = true;
-          if (player.playerMovesLeft > 1) {
-            setLockMoves(false);
-          }
-          newSquare.occupied = true;
-          if (newSquare.deleted) {
-            newSquare.deleted = false; // Reactivate the deleted square if the square is not already activated
-          }
-        }, movementDelay);
-
-        setPlayer(newPlayer);
+        }));
+      } else {
+        setIsMoving(false);
+        setLockMoves(false);
       }
     },
     [player, grid, gameOver]
   );
 
-  // Calculate player percentage
-  function calculatePlayerPercentage(playerColor) {
-    const goalRgb = hexToRgb(goalColor);
-    const playerRgb = hexToRgb(playerColor);
-
-    const colorDifference = Math.sqrt(
-      Math.pow(goalRgb.r - playerRgb.r, 2) +
-        Math.pow(goalRgb.g - playerRgb.g, 2) +
-        Math.pow(goalRgb.b - playerRgb.b, 2)
-    );
-
-    const maxDifference = Math.sqrt(Math.pow(255, 2) * 3);
-    const percentage = Math.max(
-      0,
-      100 - (colorDifference / maxDifference) * 100
-    );
-
-    return parseFloat(percentage.toFixed(0));
-  }
-
   // Calculate player score and returns a integer betweeen 0 and 1
   function calculatePlayerScore(x) {
     var score = 0;
-    if (x <= 90) {
+    if (x <= 87) {
       score = 0;
-    } else if (x >= 90 && x <= 95) {
+    } else if (x >= 87 && x <= 93) {
       score = 1;
-    } else if (x > 95) {
-      score = (99 / 5 ** 2) * Math.pow(x - 95, 2) + 1;
+    } else if (x > 93) {
+      score = (99 / 7 ** 2) * Math.pow(x - 93, 2) + 1;
     } else {
       score = 0;
     }
@@ -362,14 +361,12 @@ function SinglePlayer() {
   }, [handleMove]);
 
   const handleLock = useCallback(() => {
-    // double check that their score is not zero, otherwise could press enter to refresh board
-    if (player.playerCurrentScore > 0) {
-      // CHECK IF IS MOVING BEFORE RUNNING HANDLELOCK
+    if (player.playerCurrentScore > 0 && !isMoving) {
       setLockMoves(true);
       setLockTriggered(true);
       setGrid(initializeGrid);
     }
-  }, [player.playerCurrentScore]);
+  }, [player.playerCurrentScore, isMoving]);
 
   // Can also press enter instead to trigger the lock
   useEffect(() => {
@@ -407,7 +404,7 @@ function SinglePlayer() {
         playerRow: startSquare.row,
         playerColor: startSquare.color,
         playerCurrentScore: calculatePlayerScore(
-          calculatePlayerPercentage(startSquare.color)
+          calculateColorSimilarity(startSquare.color, goalColor)
         ),
         playerTotalScore:
           prevPlayer.playerTotalScore + prevPlayer.playerCurrentScore,
@@ -474,7 +471,11 @@ function SinglePlayer() {
 
   return (
     <div className="game">
-      {gameOver && <p>Game Over!</p>}
+      {gameOver ? (
+        <p style={{ marginBottom: 0 }}>Game Over!</p>
+      ) : (
+        <p style={{ marginBottom: 0 }}>Mix the colors to match the top bar</p>
+      )}
       <Grid
         numRows={numRows}
         numColumns={numColumns}

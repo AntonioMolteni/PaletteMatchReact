@@ -23,7 +23,7 @@ export class Player extends Schema {
 export class Square extends Schema {
   @type("number") row: number;
   @type("number") col: number;
-  @type("string") color: string; // Changed type to string
+  @type("string") color: string;
   @type("boolean") deleted: boolean;
   @type("boolean") occupied: boolean;
 
@@ -31,7 +31,7 @@ export class Square extends Schema {
     super();
     this.row = row;
     this.col = col;
-    this.color = color; // No need for parsing, already a string
+    this.color = color;
     this.deleted = deleted;
     this.occupied = occupied;
   }
